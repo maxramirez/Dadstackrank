@@ -208,6 +208,7 @@
     display: inline-flex; align-items: center; justify-content: center; gap: 10px;
     font: 700 17px var(--sans);
     border: 0; cursor: pointer;
+    text-decoration: none;
     border-radius: 14px;
     padding: 17px 34px;
     background: var(--accent);
@@ -464,7 +465,7 @@
       <h3>Make it real.</h3>
       <p>We’ll copy your rank to the clipboard — paste it onto a create-your-own mug on Zazzle, pick a font, done. Honesty ships in 3–5 business days.</p>
       <div class="btn-row">
-        <button type="button" class="btn" id="order">☕&nbsp; Order my mug on Zazzle</button>
+        <a class="btn" id="order" href="https://www.zazzle.com/custom/mugs" target="_blank" rel="noopener">☕&nbsp; Order my mug on Zazzle</a>
         <button type="button" class="btn secondary" id="copy">Copy “<span id="copy-preview">#457,723 DAD</span>”</button>
         <button type="button" class="btn secondary" id="share">Share my rank</button>
       </div>
@@ -687,11 +688,11 @@
   });
 
   $("order").addEventListener("click", function () {
+    // real <a href> handles the navigation; we just copy the rank text alongside
     copyText(mugText()).then(
       function () { note(mugText() + " copied — paste it in Zazzle’s designer."); },
       function () { note("Your mug text: " + mugText()); }
     );
-    window.open("https://www.zazzle.com/custom/mugs", "_blank", "noopener");
   });
 
   $("share").addEventListener("click", function () {
