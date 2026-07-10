@@ -267,6 +267,50 @@
     font-size: 15px;
   }
 
+  /* ---------- hall of fame / shame ---------- */
+  .hall {
+    display: none;
+    margin: 34px auto 0;
+    max-width: 480px;
+    background: var(--paper-deep);
+    border: 1px dashed var(--ink-faint);
+    border-radius: 16px;
+    padding: 24px 26px;
+    text-align: left;
+  }
+  .hall.shown { display: block; animation: rise .5s cubic-bezier(.2,.8,.3,1) both; }
+  .hall-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 12px;
+  }
+  .hall-name {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 21px;
+    color: var(--ink);
+  }
+  .hall-fact {
+    margin-top: 8px;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+  .hall-more {
+    margin-top: 14px;
+    background: none; border: 0; cursor: pointer;
+    font: 600 13px var(--sans);
+    color: var(--accent);
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    text-underline-offset: 3px;
+  }
+  .hall-more:hover { text-decoration-color: var(--accent); }
+
   /* ---------- mug ---------- */
   .mug-stage {
     margin: 38px auto 0;
@@ -379,6 +423,13 @@
       <p class="rank-quip" id="quip"></p>
     </div>
 
+    <aside class="hall" id="hall">
+      <span class="hall-label" id="hall-label"></span>
+      <div class="hall-name" id="hall-name"></div>
+      <p class="hall-fact" id="hall-fact"></p>
+      <button type="button" class="hall-more" id="hall-more">show me another →</button>
+    </aside>
+
     <div class="mug-stage">
       <svg viewBox="0 0 360 300" role="img" aria-label="Preview of your custom ranked mug">
         <defs>
@@ -435,6 +486,41 @@
   var WORDS  = { dad: "DAD", mom: "MOM" };
   var STEPS  = 10000;
 
+  var LEGENDS = {
+    dad: {
+      best: [
+        ["Bandit Heeler (Bluey)", "Commits to the bit so hard that entire episodes are just him playing whatever game his daughters invent. Has never once phoned it in."],
+        ["Marlin (Finding Nemo)", "Swam the entire Pacific Ocean, faced down sharks, and got swallowed by a whale to find his son. And he did it all with crippling anxiety."],
+        ["Guido (Life Is Beautiful)", "Convinced his little boy that a concentration camp was an elaborate game, and kept the joke going to protect him until the very end."],
+        ["Dick Hoyt", "Pushed his son Rick's wheelchair through 32 Boston Marathons and towed him across 6 Ironman triathlons — because Rick said that when they raced, he didn't feel disabled."],
+        ["Mufasa (The Lion King)", "Died saving his son, then kept showing up afterward with guidance. Death could not end this man's shift."],
+        ["Atticus Finch (To Kill a Mockingbird)", "Raised two kids alone while quietly serving as the moral backbone of an entire town. Never raised his voice once."]
+      ],
+      worst: [
+        ["Kronos (Greek mythology)", "Ate his own children as a workplace-safety measure. All five of them. There was a prophecy involved, but still — ate them."],
+        ["Darth Vader", "Cut off his son's hand, froze his daughter's boyfriend in carbonite, and blew up her home planet. Did eventually apologize."],
+        ["Denethor (The Lord of the Rings)", "Sent one son on a suicide mission, then tried to cremate the other while he was still alive. Snacked on cherry tomatoes throughout."],
+        ["Homer Simpson", "Strangled his son so regularly it became a running gag for thirty-five years. Also worked at a nuclear plant, unsupervised."],
+        ["Jack Torrance (The Shining)", "Took the family to a nice quiet hotel for the winter so he could focus on his writing. It did not go great."]
+      ]
+    },
+    mom: {
+      best: [
+        ["Molly Weasley (Harry Potter)", "Raised seven kids on a shoestring budget, adopted an eighth without hesitation, and dueled the most dangerous witch alive for them. Won."],
+        ["Joyce Byers (Stranger Things)", "Believed her son was alive when the entire town said otherwise, and communicated with him through Christmas lights. She was right."],
+        ["Helen Parr / Elastigirl (The Incredibles)", "Literally stretches herself in every direction for her family. Also flew the plane herself."],
+        ["Sarah Connor (Terminator)", "Spent decades training to protect her son from robots from the future. Was correct the entire time."],
+        ["Ma (Room)", "Built her son an entire world inside a single room — then got him out of it."]
+      ],
+      worst: [
+        ["Mother Gothel (Tangled)", "Kidnapped a baby for the skincare benefits, then spent eighteen years gaslighting her. “Mother knows best” was a threat."],
+        ["The Other Mother (Coraline)", "Seemed lovely at first — great cook, very attentive. But the buttons-for-eyes policy was a dealbreaker."],
+        ["Cersei Lannister (Game of Thrones)", "Genuinely loved her children, to be fair. Everyone else in the city, considerably less so."],
+        ["Norma Bates (Psycho)", "Raised a boy so devoted to her that he never really let her go. At all. Even after."]
+      ]
+    }
+  };
+
   var who = "dad";
   var revealedRank = null;
 
@@ -468,17 +554,19 @@
   }
   function computeRank(step) {
     var total = TOTALS[who];
+    if (step >= STEPS) return 2;      // #1 is permanently occupied. See the legends.
+    if (step <= 0) return total;      // dead last, but the mug is one of a kind
     var s = step / STEPS;                       // 0..1, best = 1
     var sEff = Math.max(0, Math.min(1, s - hash01(step) / STEPS));
-    var rank = 1 + Math.floor((1 - sEff) * (total - 1));
-    return Math.max(1, Math.min(total, rank));
+    var rank = 2 + Math.floor((1 - sEff) * (total - 3));
+    return Math.max(2, Math.min(total - 1, rank));
   }
 
   function fmt(n) { return n.toLocaleString("en-US"); }
 
   function quipFor(step, rank) {
-    if (step >= STEPS)      return "Slammed it to the far end and still not #1? That mug was always a lie.";
-    if (rank === 1)         return "Statistically impossible. Enjoy it.";
+    if (step >= STEPS)      return "So close. The #1 spot is spoken for — and honestly, it's not even close.";
+    if (step <= 0)          return "Dead last. On the bright side: nobody else on Earth has this mug.";
     if (step >= 9500)       return "Top-shelf parenting. The mug will barely fit the confidence.";
     if (step >= 7500)       return "Comfortably above average. Your kid’s therapist will be bored.";
     if (step >= 4500)       return "Perfectly mid. The most honest mug on the shelf.";
@@ -521,9 +609,18 @@
     fitMugText(rank);
     $("copy-preview").textContent = "#" + fmt(rank) + " " + word;
 
-    $("context").innerHTML = "Out of roughly <b>" + fmt(total) + "</b> " + who + "s alive today, " +
-      "you rank ahead of <b>" + pctBetter.toFixed(pctBetter > 99 ? 4 : 1) + "%</b> of them.";
+    if (step >= STEPS) {
+      $("context").innerHTML = "Out of roughly <b>" + fmt(total) + "</b> " + who + "s alive today, " +
+        "exactly <b>one</b> outranks you.";
+    } else if (step <= 0) {
+      $("context").innerHTML = "Out of roughly <b>" + fmt(total) + "</b> " + who + "s alive today, " +
+        "you rank ahead of… <b>none of them</b>. Every single one.";
+    } else {
+      $("context").innerHTML = "Out of roughly <b>" + fmt(total) + "</b> " + who + "s alive today, " +
+        "you rank ahead of <b>" + pctBetter.toFixed(pctBetter > 99 ? 4 : 1) + "%</b> of them.";
+    }
     $("quip").textContent = quipFor(step, rank);
+    updateHall(step);
 
     var result = $("result");
     var firstReveal = !result.classList.contains("shown");
@@ -539,6 +636,34 @@
   }
 
   $("calc").addEventListener("click", function () { reveal(true); });
+
+  /* ---------- hall of fame / shame ---------- */
+  var hallList = null, hallIdx = 0;
+  function updateHall(step) {
+    var hall = $("hall");
+    if (step >= STEPS) {
+      hallList = LEGENDS[who].best;
+      $("hall-label").textContent = "Currently holding the #1 spot";
+    } else if (step <= 0) {
+      hallList = LEGENDS[who].worst;
+      $("hall-label").textContent = "Meanwhile, just above you in the standings";
+    } else {
+      hallList = null;
+      hall.classList.remove("shown");
+      return;
+    }
+    hallIdx = (Math.random() * hallList.length) | 0;
+    renderHallEntry();
+    hall.classList.add("shown");
+  }
+  function renderHallEntry() {
+    $("hall-name").textContent = hallList[hallIdx][0];
+    $("hall-fact").textContent = hallList[hallIdx][1];
+  }
+  $("hall-more").addEventListener("click", function () {
+    hallIdx = (hallIdx + 1) % hallList.length;
+    renderHallEntry();
+  });
 
   /* ---------- order / copy / share ---------- */
   function mugText() { return "#" + fmt(revealedRank) + " " + WORDS[who]; }
